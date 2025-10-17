@@ -4,17 +4,24 @@ import cv2
 import av
 from ultralytics import YOLO
 import mediapipe as mp
-import numpy as np
+import torch
 
-st.title("Webcam with Face Blur & Pose Detection")
+st.title("Webcam with Face Blur & Pose Detection (GPU/MPS Enabled)")
 
 # Sidebar toggles
 st.sidebar.header("Options")
 face_blur_enabled = st.sidebar.checkbox("Enable Face Blur", value=True)
 pose_enabled = st.sidebar.checkbox("Enable Pose Detection", value=True)
 
-# Load models
-pose_model = YOLO("yolov8n-pose.pt")  # YOLOv8-pose
+# Determine device: GPU (MPS) if available, else CPU
+device = "mps" if torch.backends.mps.is_available() else "cpu"
+st.sidebar.text(f"Device used for YOLO: {device}")
+
+# Load YOLO pose model and move to device
+pose_model = YOLO("yolov8n-pose.pt")
+pose_model.to(device)
+
+# Initialize MediaPipe face detection
 mp_face = mp.solutions.face_detection.FaceDetection(min_detection_confidence=0.5)
 
 def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
@@ -42,12 +49,14 @@ def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
 
     # --- Pose Detection ---
     if pose_enabled:
+        # Run YOLO inference on the device (GPU/MPS if available)
         results_pose = pose_model(img, stream=True)
         for r in results_pose:
             img = r.plot()  # draw skeleton
 
     return av.VideoFrame.from_ndarray(img, format="bgr24")
 
+# Start the webcam streamer
 webrtc_streamer(
     key="webcam",
     video_frame_callback=video_frame_callback,
