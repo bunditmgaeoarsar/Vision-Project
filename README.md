@@ -25,5 +25,5 @@ This project is a **Streamlit web app** that streams your webcam to the browser 
 1. **Clone this repository**
 
 ```bash
-git clone https://github.com/yourusername/Vision-Project.git
+git clone https://github.com/bunditmgaeoarsar/Vision-Project.git
 cd Vision-Project
